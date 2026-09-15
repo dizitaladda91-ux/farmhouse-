@@ -29,6 +29,7 @@ export default function PropertyCard({ property, onFavoriteToggle, isFavorite = 
       ? primaryMedia.url
       : defaultImg
   );
+  const [fav, setFav] = useState(isFavorite);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
