@@ -107,7 +107,7 @@ export default function PropertyDetailPage() {
 
   const mediaList = property.media || [];
   const activeMedia = mediaList[activeMediaIndex] || {
-    url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1600&q=80"
+    url: "/images/farmhouse-hero.jpg"
   };
 
   return (

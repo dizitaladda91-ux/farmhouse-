@@ -47,38 +47,38 @@ export default function HomePage() {
       title: "Farmhouses",
       count: "18+ Listings",
       desc: "2 to 10+ Acre gated green land plots with private lawns & orchards.",
-      image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80",
+      image: "/images/farmhouse-hero.jpg",
       type: "Farmhouse"
     },
     {
       title: "Luxury Bungalows",
       count: "12+ Listings",
       desc: "Modern architectural luxury residences in prime Delhi NCR & Gurgaon belts.",
-      image: "https://images.unsplash.com/photo-1600585152220-90363fe7e115?auto=format&fit=crop&w=800&q=80",
+      image: "/images/bungalow.jpg",
       type: "Luxury Bungalow"
     },
     {
       title: "Coastal Villas",
       count: "15+ Listings",
       desc: "Private beach retreats & coconut grove villas in Alibaug & North Goa.",
-      image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=800&q=80",
+      image: "/images/villa.jpg",
       type: "Villa"
     },
     {
       title: "Gated Estates",
       count: "10+ Listings",
       desc: "High-value architectural mansions with smart automation & hill views.",
-      image: "https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=800&q=80",
+      image: "/images/estate.jpg",
       type: "Estate"
     },
   ];
 
   const destinations = [
-    { name: "Chhatarpur & DLF Farms", location: "Delhi NCR", count: "14 Properties", image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80", query: "Delhi" },
-    { name: "Golf Course Extension", location: "Gurgaon", count: "10 Properties", image: "https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=600&q=80", query: "Gurgaon" },
-    { name: "Mandwa Coastal Belt", location: "Alibaug", count: "8 Properties", image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=600&q=80", query: "Alibaug" },
-    { name: "Assagao & Vagator", location: "North Goa", count: "12 Properties", image: "https://images.unsplash.com/photo-1600585152220-90363fe7e115?auto=format&fit=crop&w=600&q=80", query: "Assagao" },
-    { name: "Tungarli Hills", location: "Lonavala", count: "6 Properties", image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=80", query: "Lonavala" },
+    { name: "Chhatarpur & DLF Farms", location: "Delhi NCR", count: "14 Properties", image: "/images/farmhouse-hero.jpg", query: "Delhi" },
+    { name: "Golf Course Extension", location: "Gurgaon", count: "10 Properties", image: "/images/estate.jpg", query: "Gurgaon" },
+    { name: "Mandwa Coastal Belt", location: "Alibaug", count: "8 Properties", image: "/images/villa.jpg", query: "Alibaug" },
+    { name: "Assagao & Vagator", location: "North Goa", count: "12 Properties", image: "/images/bungalow.jpg", query: "Assagao" },
+    { name: "Tungarli Hills", location: "Lonavala", count: "6 Properties", image: "/images/hills.jpg", query: "Lonavala" },
   ];
 
   return (
@@ -236,7 +236,7 @@ export default function HomePage() {
             <Card3D intensity={6} depth={15}>
               <div className="relative h-[480px] w-full rounded-3xl overflow-hidden border border-slate-200 shadow-2xl">
                 <Image
-                  src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
+                  src="/images/bedroom.jpg"
                   alt="About Haveli & Estates"
                   fill
                   className="object-cover"

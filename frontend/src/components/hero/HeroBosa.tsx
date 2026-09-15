@@ -41,7 +41,7 @@ export default function HeroBosa() {
       {/* Background Hero Image */}
       <div className="absolute inset-0 z-0 opacity-70">
         <Image
-          src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90"
+          src="/images/farmhouse-hero.jpg"
           alt="Bosa Real Estate Group"
           fill
           priority

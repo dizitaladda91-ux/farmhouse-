@@ -15,9 +15,20 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property, onFavoriteToggle, isFavorite = false }: PropertyCardProps) {
-  const [fav, setFav] = useState(isFavorite);
+  const getFallbackImage = (type?: string) => {
+    if (type === "Luxury Bungalow") return "/images/bungalow.jpg";
+    if (type === "Villa") return "/images/villa.jpg";
+    if (type === "Estate") return "/images/estate.jpg";
+    return "/images/farmhouse-hero.jpg";
+  };
+
+  const defaultImg = getFallbackImage(property.property_type);
   const primaryMedia = property.media?.find((m) => m.is_primary) || property.media?.[0];
-  const imageUrl = primaryMedia?.url || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1000&q=80";
+  const [imgSrc, setImgSrc] = useState(
+    primaryMedia?.url && !primaryMedia.url.includes("unsplash.com")
+      ? primaryMedia.url
+      : defaultImg
+  );
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -35,9 +46,10 @@ export default function PropertyCard({ property, onFavoriteToggle, isFavorite = 
         {/* 1. Image Container */}
         <div className="relative h-64 w-full overflow-hidden bg-slate-900">
           <Image
-            src={imageUrl}
+            src={imgSrc}
             alt={property.title}
             fill
+            onError={() => setImgSrc(defaultImg)}
             className="object-cover group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />

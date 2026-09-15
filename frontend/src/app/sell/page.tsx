@@ -126,9 +126,9 @@ export default function SellPropertyWizard() {
   const [docSitePlanUrl, setDocSitePlanUrl] = useState("https://haveliestates.in/docs/siteplan_sample.pdf");
 
   // STEP 7: Photos & Videos
-  const [coverImageUrl, setCoverImageUrl] = useState("https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80");
-  const [bedroomImageUrl, setBedroomImageUrl] = useState("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80");
-  const [gardenImageUrl, setGardenImageUrl] = useState("https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1200&q=80");
+  const [coverImageUrl, setCoverImageUrl] = useState("/images/farmhouse-hero.jpg");
+  const [bedroomImageUrl, setBedroomImageUrl] = useState("/images/bedroom.jpg");
+  const [gardenImageUrl, setGardenImageUrl] = useState("/images/villa.jpg");
   const [droneVideoUrl, setDroneVideoUrl] = useState("https://youtube.com/watch?v=demo_estate_tour");
   const [tour360Url, setTour360Url] = useState("https://my.matterport.com/show/?m=demo_360_farmhouse");
 
