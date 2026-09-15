@@ -1,8 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-if (!API_BASE_URL && process.env.NODE_ENV === "production") {
-  throw new Error("NEXT_PUBLIC_API_URL must be configured for the production build.");
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api/backend/api";
 
 export async function fetchApi<T>(
   endpoint: string,
@@ -19,7 +15,7 @@ export async function fetchApi<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL || "http://localhost:8000/api"}${endpoint}`, {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
   });
