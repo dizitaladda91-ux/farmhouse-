@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Property } from "@/types";
@@ -30,6 +30,16 @@ export default function PropertyCard({ property, onFavoriteToggle, isFavorite = 
       : defaultImg
   );
   const [fav, setFav] = useState(isFavorite);
+
+  useEffect(() => {
+    const freshDefault = getFallbackImage(property.property_type);
+    const freshMedia = property.media?.find((m) => m.is_primary) || property.media?.[0];
+    setImgSrc(
+      freshMedia?.url && !freshMedia.url.includes("unsplash.com")
+        ? freshMedia.url
+        : freshDefault
+    );
+  }, [property]);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();

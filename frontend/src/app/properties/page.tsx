@@ -8,6 +8,7 @@ import PropertyCard from "@/components/property/PropertyCard";
 import Card3D from "@/components/ui/Card3D";
 import { Property } from "@/types";
 import { fetchApi } from "@/lib/api";
+import { MOCK_PROPERTIES } from "@/lib/mockData";
 import {
   SlidersHorizontal, MapPin, Filter, ArrowUpDown, ShieldCheck, Map as MapIcon, Grid,
   Sparkles, TreePine, Waves, Home, Building2, ChevronRight, RotateCcw
@@ -86,10 +87,23 @@ function SearchResultsContent() {
       params.append("limit", "12");
 
       const data = await fetchApi<{ items: Property[]; total: number }>(`/properties?${params.toString()}`);
-      setProperties(data.items || []);
-      setTotal(data.total || 0);
+      if (data.items && data.items.length > 0) {
+        setProperties(data.items);
+        setTotal(data.total);
+      } else {
+        const filtered = propertyType 
+          ? MOCK_PROPERTIES.filter(p => p.property_type === propertyType)
+          : MOCK_PROPERTIES;
+        setProperties(filtered);
+        setTotal(filtered.length);
+      }
     } catch (err) {
       console.error("Failed to load properties", err);
+      const filtered = propertyType 
+        ? MOCK_PROPERTIES.filter(p => p.property_type === propertyType)
+        : MOCK_PROPERTIES;
+      setProperties(filtered);
+      setTotal(filtered.length);
     } finally {
       setLoading(false);
     }

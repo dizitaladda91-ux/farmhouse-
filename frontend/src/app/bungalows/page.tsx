@@ -7,6 +7,7 @@ import Footer from "@/components/footer/Footer";
 import PropertyCard from "@/components/property/PropertyCard";
 import { Property } from "@/types";
 import { fetchApi } from "@/lib/api";
+import { MOCK_PROPERTIES } from "@/lib/mockData";
 import { SlidersHorizontal, MapPin, ArrowUpDown, ShieldCheck, Home, Building } from "lucide-react";
 
 function BungalowsContent() {
@@ -57,10 +58,19 @@ function BungalowsContent() {
       params.append("limit", "12");
 
       const data = await fetchApi<{ items: Property[]; total: number }>(`/properties?${params.toString()}`);
-      setProperties(data.items || []);
-      setTotal(data.total || 0);
+      if (data.items && data.items.length > 0) {
+        setProperties(data.items);
+        setTotal(data.total);
+      } else {
+        const bgMocks = MOCK_PROPERTIES.filter(p => p.property_type === "Luxury Bungalow");
+        setProperties(bgMocks);
+        setTotal(bgMocks.length);
+      }
     } catch (err) {
       console.error("Failed to load bungalows", err);
+      const bgMocks = MOCK_PROPERTIES.filter(p => p.property_type === "Luxury Bungalow");
+      setProperties(bgMocks);
+      setTotal(bgMocks.length);
     } finally {
       setLoading(false);
     }

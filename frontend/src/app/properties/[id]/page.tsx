@@ -7,6 +7,7 @@ import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
 import { Property } from "@/types";
 import { fetchApi } from "@/lib/api";
+import { MOCK_PROPERTIES } from "@/lib/mockData";
 import { formatIndianPrice, formatLandArea } from "@/lib/utils";
 import {
   ShieldCheck, Heart, Share2, MapPin, Bed, Bath, Maximize2, Building2,
@@ -38,9 +39,16 @@ export default function PropertyDetailPage() {
     async function loadProperty() {
       try {
         const data = await fetchApi<Property>(`/properties/${propertyId}`);
-        setProperty(data);
+        if (data && data.id) {
+          setProperty(data);
+        } else {
+          const fallback = MOCK_PROPERTIES.find(p => p.id === propertyId || p.slug === propertyId) || MOCK_PROPERTIES[0];
+          setProperty(fallback);
+        }
       } catch (err) {
         console.error("Failed to load property details", err);
+        const fallback = MOCK_PROPERTIES.find(p => p.id === propertyId || p.slug === propertyId) || MOCK_PROPERTIES[0];
+        setProperty(fallback);
       } finally {
         setLoading(false);
       }

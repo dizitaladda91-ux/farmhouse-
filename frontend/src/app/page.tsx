@@ -15,6 +15,8 @@ import {
   ArrowRight, TreePine, Key, PhoneCall, Award, Users, TrendingUp
 } from "lucide-react";
 
+import { MOCK_PROPERTIES } from "@/lib/mockData";
+
 export default function HomePage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,9 +26,14 @@ export default function HomePage() {
     async function loadProperties() {
       try {
         const res = await fetchApi<{ items: Property[] }>("/properties?limit=6");
-        setProperties(res.items || []);
+        if (res.items && res.items.length > 0) {
+          setProperties(res.items);
+        } else {
+          setProperties(MOCK_PROPERTIES);
+        }
       } catch (err) {
         console.error("Failed to load featured properties", err);
+        setProperties(MOCK_PROPERTIES);
       } finally {
         setLoading(false);
       }
