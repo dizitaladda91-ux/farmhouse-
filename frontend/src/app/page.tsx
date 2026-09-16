@@ -93,10 +93,12 @@ export default function HomePage() {
       <Navbar />
 
       {/* Bosa Hero with Floating Multi-Tab Search Bar */}
-      <HeroBosa />
+      <div className="relative z-40">
+        <HeroBosa />
+      </div>
 
       {/* SECTION 1: Bosa Counter Stats Impact Bar */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-30 mb-20">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10 mb-20">
         <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-xl grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>
             <span className="font-heading text-3xl sm:text-4xl font-extrabold bosa-gradient-text block">500+</span>

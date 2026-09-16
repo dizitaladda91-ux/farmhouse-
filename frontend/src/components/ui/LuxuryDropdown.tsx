@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check } from "lucide-react";
@@ -98,18 +98,18 @@ export default function LuxuryDropdown({
 
       {/* Floating 3D Animated Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white/98 backdrop-blur-2xl border border-slate-200 rounded-2xl shadow-[0_20px_50px_rgba(26,54,93,0.25)] p-1.5 animate-in fade-in zoom-in-95 duration-200 min-w-[200px]">
-          <div className="max-h-64 overflow-y-auto space-y-1 py-1 custom-scrollbar">
+        <div className="absolute top-full left-0 mt-2 z-[9999] bg-white border border-slate-200/90 rounded-2xl shadow-[0_25px_60px_-10px_rgba(26,54,93,0.3),0_10px_20px_-5px_rgba(0,0,0,0.1)] p-2 min-w-full w-max max-w-xs animate-in fade-in zoom-in-95 duration-200">
+          <div className="max-h-64 overflow-y-auto space-y-1 py-1">
             {options.map((opt) => {
               const isSelected = opt.value === value;
               return (
                 <div
                   key={opt.value}
                   onClick={() => handleSelect(opt.value)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 ${
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 ${
                     isSelected
                       ? "bosa-gradient-bg text-white font-bold shadow-sm"
-                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:pl-4 font-medium"
+                      : "text-slate-900 font-semibold hover:bg-slate-100 hover:text-[#1A365D] hover:pl-4.5"
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
@@ -119,7 +119,7 @@ export default function LuxuryDropdown({
                         className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-bold tracking-wider ${
                           isSelected
                             ? "bg-white/20 text-white"
-                            : "bg-amber-100 text-amber-800"
+                            : "bg-amber-100 text-amber-900 border border-amber-300/60"
                         }`}
                       >
                         {opt.badge}
