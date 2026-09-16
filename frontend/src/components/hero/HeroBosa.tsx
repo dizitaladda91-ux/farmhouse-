@@ -4,11 +4,11 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, Home, IndianRupee, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
+import { Search, MapPin, Home, IndianRupee, Sparkles, ArrowRight, ShieldCheck, ChevronDown, Bed } from "lucide-react";
+import Card3D from "@/components/ui/Card3D";
 
 export default function HeroBosa() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<string>("All");
   const [location, setLocation] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -24,12 +24,8 @@ export default function HeroBosa() {
     }
 
     const params = new URLSearchParams();
-    if (location) params.append("location", location);
-    if (activeTab !== "All") {
-      params.append("property_type", activeTab);
-    } else if (propertyType) {
-      params.append("property_type", propertyType);
-    }
+    if (location.trim()) params.append("location", location.trim());
+    if (propertyType) params.append("property_type", propertyType);
     if (maxPrice) params.append("max_price", maxPrice);
     if (bedrooms) params.append("bedrooms", bedrooms);
     router.push(`/properties?${params.toString()}`);
@@ -86,137 +82,160 @@ export default function HeroBosa() {
                 : "bg-slate-900/80 text-slate-300 border border-slate-700 hover:text-white"
             }`}
           >
-            ✨ AI Natural Query
+             AI Natural Query
           </button>
         </div>
       </div>
 
-      {/* Bosa Signature Floating Property Search Dock */}
+      {/* 3D Animated Floating Property Search Dock */}
       <div className="relative z-20 max-w-6xl mx-auto px-4 w-full mt-10">
-        <div className="bg-white/95 backdrop-blur-xl p-6 sm:p-8 rounded-3xl shadow-2xl border border-slate-200">
-          
-          {/* Category Tabs Header */}
-          <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-5">
-            <div className="flex items-center space-x-2 overflow-x-auto pb-1">
-              {["All", "Farmhouse", "Villa", "Luxury Bungalow"].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveTab(cat)}
-                  className={`px-4 py-2 rounded-xl text-xs font-heading font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
-                    activeTab === cat
-                      ? "bosa-gradient-bg text-white shadow-md"
-                      : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
-                  }`}
-                >
-                  {cat === "All" ? "All Properties" : cat}
-                </button>
-              ))}
-            </div>
-
-            <span className="hidden md:inline-block text-xs text-emerald-600 font-semibold flex items-center gap-1">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Verified Listings Only</span>
-            </span>
-          </div>
-
-          {/* Search Form Inputs */}
-          {searchMode === "structured" ? (
-            <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <Card3D intensity={5} depth={16} className="w-full">
+          <div className="relative rounded-3xl p-1 bg-gradient-to-b from-white/90 via-white/50 to-[#D4AF37]/35 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.45)] backdrop-blur-2xl">
+            <div className="bg-white/95 backdrop-blur-xl p-5 sm:p-7 rounded-[22px] border border-white/70 shadow-inner">
               
-              {/* Location Input */}
-              <div className="relative">
-                <MapPin className="w-4 h-4 text-emerald-700 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="City / Locality (Chhatarpur...)"
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 rounded-xl pl-10 pr-3 py-3.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white"
-                />
+              {/* Top Meta Info Bar (Clean, Luxury & Minimal - No Category Tabs) */}
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-heading font-bold text-slate-800 uppercase tracking-wider">
+                    Instant Multi-Filter Search
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-semibold bg-emerald-50/90 px-3 py-1 rounded-full border border-emerald-200/70 shadow-sm">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Verified Listings Only</span>
+                </div>
               </div>
 
-              {/* Property Type Select */}
-              <div className="relative">
-                <Home className="w-4 h-4 text-emerald-700 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <select
-                  value={propertyType}
-                  onChange={(e) => setPropertyType(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 rounded-xl pl-10 pr-3 py-3.5 text-xs text-slate-900 focus:outline-none appearance-none focus:bg-white"
-                >
-                  <option value="">Property Type</option>
-                  <option value="Farmhouse">Farmhouse</option>
-                  <option value="Luxury Bungalow">Bungalow</option>
-                  <option value="Villa">Villa</option>
-                  <option value="Estate">Estate</option>
-                  <option value="Weekend Home">Weekend Home</option>
-                </select>
-              </div>
+              {/* Search Form Inputs */}
+              {searchMode === "structured" ? (
+                <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+                  
+                  {/* 1. Location Input */}
+                  <div className="group relative bg-slate-50/90 hover:bg-white border border-slate-200/90 hover:border-[#D4AF37] focus-within:border-[#1A365D] focus-within:bg-white rounded-2xl p-2.5 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1 focus-within:-translate-y-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-2 mb-0.5">
+                      Location
+                    </label>
+                    <div className="flex items-center px-2">
+                      <MapPin className="w-4 h-4 text-emerald-700 flex-shrink-0 mr-2 group-hover:scale-110 transition-transform" />
+                      <input
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="City / Locality (Chhatarpur...)"
+                        className="w-full bg-transparent text-xs font-semibold text-slate-900 placeholder-slate-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
 
-              {/* Max Price */}
-              <div className="relative">
-                <IndianRupee className="w-4 h-4 text-emerald-700 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <select
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 rounded-xl pl-10 pr-3 py-3.5 text-xs text-slate-900 focus:outline-none appearance-none focus:bg-white"
-                >
-                  <option value="">Max Budget</option>
-                  <option value="30000000">Up to ₹3 Crore</option>
-                  <option value="50000000">Up to ₹5 Crore</option>
-                  <option value="100000000">Up to ₹10 Crore</option>
-                  <option value="250000000">Up to ₹25 Crore</option>
-                  <option value="500000000">Up to ₹50 Crore+</option>
-                </select>
-              </div>
+                  {/* 2. Property Type Dropdown */}
+                  <div className="group relative bg-slate-50/90 hover:bg-white border border-slate-200/90 hover:border-[#D4AF37] focus-within:border-[#1A365D] focus-within:bg-white rounded-2xl p-2.5 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1 focus-within:-translate-y-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-2 mb-0.5">
+                      Property Type
+                    </label>
+                    <div className="flex items-center px-2 relative">
+                      <Home className="w-4 h-4 text-[#1A365D] flex-shrink-0 mr-2 group-hover:scale-110 transition-transform" />
+                      <select
+                        value={propertyType}
+                        onChange={(e) => setPropertyType(e.target.value)}
+                        className="w-full bg-transparent text-xs font-semibold text-slate-900 focus:outline-none appearance-none cursor-pointer pr-6"
+                      >
+                        <option value="">All Property Types</option>
+                        <option value="Farmhouse">Farmhouse</option>
+                        <option value="Luxury Bungalow">Luxury Bungalow</option>
+                        <option value="Villa">Coastal / Hill Villa</option>
+                        <option value="Estate">Gated Estate</option>
+                        <option value="Weekend Home">Weekend Home</option>
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 pointer-events-none group-hover:text-slate-700 transition-colors" />
+                    </div>
+                  </div>
 
-              {/* Bedrooms */}
-              <div className="relative">
-                <select
-                  value={bedrooms}
-                  onChange={(e) => setBedrooms(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 rounded-xl px-3 py-3.5 text-xs text-slate-900 focus:outline-none appearance-none focus:bg-white"
-                >
-                  <option value="">Bedrooms (Any)</option>
-                  <option value="3">3+ BHK</option>
-                  <option value="4">4+ BHK</option>
-                  <option value="5">5+ BHK</option>
-                  <option value="6">6+ BHK Suites</option>
-                </select>
-              </div>
+                  {/* 3. Max Budget Dropdown */}
+                  <div className="group relative bg-slate-50/90 hover:bg-white border border-slate-200/90 hover:border-[#D4AF37] focus-within:border-[#1A365D] focus-within:bg-white rounded-2xl p-2.5 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1 focus-within:-translate-y-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-2 mb-0.5">
+                      Budget Range
+                    </label>
+                    <div className="flex items-center px-2 relative">
+                      <IndianRupee className="w-4 h-4 text-[#D4AF37] flex-shrink-0 mr-2 group-hover:scale-110 transition-transform" />
+                      <select
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        className="w-full bg-transparent text-xs font-semibold text-slate-900 focus:outline-none appearance-none cursor-pointer pr-6"
+                      >
+                        <option value="">Max Budget (Any)</option>
+                        <option value="30000000">Up to ₹3 Crore</option>
+                        <option value="50000000">Up to ₹5 Crore</option>
+                        <option value="100000000">Up to ₹10 Crore</option>
+                        <option value="250000000">Up to ₹25 Crore</option>
+                        <option value="500000000">Up to ₹50 Crore+</option>
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 pointer-events-none group-hover:text-slate-700 transition-colors" />
+                    </div>
+                  </div>
 
-              {/* Search Submit */}
-              <button
-                type="submit"
-                className="w-full py-3.5 bosa-gradient-bg text-white font-heading font-bold text-xs uppercase tracking-wider rounded-xl hover:shadow-lg flex items-center justify-center gap-2 transition-all"
-              >
-                <Search className="w-4 h-4" />
-                <span>Search Properties</span>
-              </button>
-            </form>
-          ) : (
-            /* AI Natural Query Bar */
-            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-center gap-3">
-              <div className="relative w-full">
-                <Sparkles className="w-5 h-5 text-emerald-700 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={naturalQuery}
-                  onChange={(e) => setNaturalQuery(e.target.value)}
-                  placeholder="e.g. 'Farmhouse in Chhatarpur near Delhi under 30 crore with swimming pool'"
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 rounded-xl pl-12 pr-4 py-4 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-8 py-4 bosa-gradient-bg text-white font-heading font-bold text-xs uppercase tracking-wider rounded-xl hover:shadow-lg flex items-center justify-center gap-2 transition-all whitespace-nowrap"
-              >
-                <span>Search</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
-          )}
+                  {/* 4. Bedrooms Dropdown */}
+                  <div className="group relative bg-slate-50/90 hover:bg-white border border-slate-200/90 hover:border-[#D4AF37] focus-within:border-[#1A365D] focus-within:bg-white rounded-2xl p-2.5 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1 focus-within:-translate-y-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-2 mb-0.5">
+                      Bedrooms
+                    </label>
+                    <div className="flex items-center px-2 relative">
+                      <Bed className="w-4 h-4 text-slate-700 flex-shrink-0 mr-2 group-hover:scale-110 transition-transform" />
+                      <select
+                        value={bedrooms}
+                        onChange={(e) => setBedrooms(e.target.value)}
+                        className="w-full bg-transparent text-xs font-semibold text-slate-900 focus:outline-none appearance-none cursor-pointer pr-6"
+                      >
+                        <option value="">Bedrooms (Any)</option>
+                        <option value="3">3+ BHK</option>
+                        <option value="4">4+ BHK</option>
+                        <option value="5">5+ BHK</option>
+                        <option value="6">6+ BHK Suites</option>
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 pointer-events-none group-hover:text-slate-700 transition-colors" />
+                    </div>
+                  </div>
 
-        </div>
+                  {/* 5. 3D Animated Raised Search Button */}
+                  <div className="flex items-end">
+                    <button
+                      type="submit"
+                      className="relative group overflow-hidden w-full h-[58px] bosa-gradient-bg text-white font-heading font-bold text-xs uppercase tracking-wider rounded-2xl shadow-[0_10px_25px_rgba(26,54,93,0.35)] hover:shadow-[0_15px_35px_rgba(212,175,55,0.45)] hover:-translate-y-1 active:translate-y-0.5 active:shadow-inner transition-all duration-300 flex items-center justify-center gap-2.5"
+                    >
+                      {/* 3D Shimmer Beam */}
+                      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+                      <Search className="w-4 h-4 text-amber-300 group-hover:scale-110 transition-transform" />
+                      <span className="tracking-wider">Search Properties</span>
+                    </button>
+                  </div>
+
+                </form>
+              ) : (
+                /* AI Natural Query Bar */
+                <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-center gap-3">
+                  <div className="relative w-full group">
+                    <Sparkles className="w-5 h-5 text-emerald-700 absolute left-4 top-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
+                    <input
+                      type="text"
+                      value={naturalQuery}
+                      onChange={(e) => setNaturalQuery(e.target.value)}
+                      placeholder="e.g. 'Farmhouse in Chhatarpur near Delhi under 30 crore with swimming pool'"
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 rounded-2xl pl-12 pr-4 py-4 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white shadow-sm hover:shadow-md transition-all"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full sm:w-auto px-8 py-4 bosa-gradient-bg text-white font-heading font-bold text-xs uppercase tracking-wider rounded-2xl hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 whitespace-nowrap shadow-md"
+                  >
+                    <span>Search</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </form>
+              )}
+
+            </div>
+          </div>
+        </Card3D>
       </div>
 
     </div>
