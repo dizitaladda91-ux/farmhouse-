@@ -8,6 +8,7 @@ import PropertyCard from "@/components/property/PropertyCard";
 import { Property } from "@/types";
 import { fetchApi } from "@/lib/api";
 import { MOCK_PROPERTIES } from "@/lib/mockData";
+import { filterPropertyList } from "@/lib/propertyFilters";
 import { SlidersHorizontal, MapPin, ArrowUpDown, ShieldCheck, Home, Building } from "lucide-react";
 
 function BungalowsContent() {
@@ -22,6 +23,7 @@ function BungalowsContent() {
   const [selectedCity, setSelectedCity] = useState(searchParams.get("city") || searchParams.get("location") || "");
   const [minPrice, setMinPrice] = useState(searchParams.get("min_price") || "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("max_price") || "");
+  const [bedrooms, setBedrooms] = useState<string>(searchParams.get("bedrooms") || "");
   const [sortBy, setSortBy] = useState<string>("relevance");
   const [page, setPage] = useState(1);
 
@@ -41,7 +43,7 @@ function BungalowsContent() {
 
   useEffect(() => {
     loadBungalows();
-  }, [query, selectedState, selectedCity, minPrice, maxPrice, sortBy, page]);
+  }, [query, selectedState, selectedCity, minPrice, maxPrice, bedrooms, sortBy, page]);
 
   async function loadBungalows() {
     setLoading(true);
@@ -53,24 +55,49 @@ function BungalowsContent() {
       if (selectedCity) params.append("location", selectedCity);
       if (minPrice) params.append("min_price", minPrice);
       if (maxPrice) params.append("max_price", maxPrice);
+      if (bedrooms) params.append("bedrooms", bedrooms);
       if (sortBy) params.append("sort_by", sortBy);
       params.append("page", page.toString());
       params.append("limit", "12");
 
-      const data = await fetchApi<{ items: Property[]; total: number }>(`/properties?${params.toString()}`);
-      if (data.items && data.items.length > 0) {
-        setProperties(data.items);
-        setTotal(data.total);
-      } else {
-        const bgMocks = MOCK_PROPERTIES.filter(p => p.property_type === "Luxury Bungalow");
-        setProperties(bgMocks);
-        setTotal(bgMocks.length);
+      let apiLoaded = false;
+      try {
+        const data = await fetchApi<{ items: Property[]; total: number }>(`/properties?${params.toString()}`);
+        if (data && Array.isArray(data.items) && data.items.length > 0) {
+          const filtered = filterPropertyList(data.items, {
+            query,
+            property_type: "Luxury Bungalow",
+            location: selectedCity,
+            city: selectedCity,
+            state: selectedState,
+            min_price: minPrice,
+            max_price: maxPrice,
+            bedrooms,
+            sort_by: sortBy,
+          });
+          setProperties(filtered);
+          setTotal(filtered.length);
+          apiLoaded = true;
+        }
+      } catch (err) {
+        // Fallback
       }
-    } catch (err) {
-      console.error("Failed to load bungalows", err);
-      const bgMocks = MOCK_PROPERTIES.filter(p => p.property_type === "Luxury Bungalow");
-      setProperties(bgMocks);
-      setTotal(bgMocks.length);
+
+      if (!apiLoaded) {
+        const filtered = filterPropertyList(MOCK_PROPERTIES, {
+          query,
+          property_type: "Luxury Bungalow",
+          location: selectedCity,
+          city: selectedCity,
+          state: selectedState,
+          min_price: minPrice,
+          max_price: maxPrice,
+          bedrooms,
+          sort_by: sortBy,
+        });
+        setProperties(filtered);
+        setTotal(filtered.length);
+      }
     } finally {
       setLoading(false);
     }

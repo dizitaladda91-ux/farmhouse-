@@ -9,6 +9,7 @@ import Card3D from "@/components/ui/Card3D";
 import { Property } from "@/types";
 import { fetchApi } from "@/lib/api";
 import { MOCK_PROPERTIES } from "@/lib/mockData";
+import { filterPropertyList } from "@/lib/propertyFilters";
 import {
   SlidersHorizontal, MapPin, Filter, ArrowUpDown, ShieldCheck, Map as MapIcon, Grid,
   Sparkles, TreePine, RotateCcw, CheckCircle2, ChevronRight, Flower2
@@ -32,7 +33,7 @@ function FarmhousesContent() {
   const [maxPrice, setMaxPrice] = useState(searchParams.get("max_price") || "");
   const [landAreaUnit, setLandAreaUnit] = useState<"sqft" | "sqyd" | "acre" | "bigha">("sqft");
   const [minLandArea, setMinLandArea] = useState("");
-  const [bedrooms, setBedrooms] = useState<string>("");
+  const [bedrooms, setBedrooms] = useState<string>(searchParams.get("bedrooms") || "");
   const [verificationStatus, setVerificationStatus] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("relevance");
   const [page, setPage] = useState(1);
@@ -76,20 +77,46 @@ function FarmhousesContent() {
       params.append("page", page.toString());
       params.append("limit", "12");
 
-      const data = await fetchApi<{ items: Property[]; total: number }>(`/properties?${params.toString()}`);
-      if (data.items && data.items.length > 0) {
-        setProperties(data.items);
-        setTotal(data.total);
-      } else {
-        const fhMocks = MOCK_PROPERTIES.filter(p => p.property_type === "Farmhouse");
-        setProperties(fhMocks);
-        setTotal(fhMocks.length);
+      let apiLoaded = false;
+      try {
+        const data = await fetchApi<{ items: Property[]; total: number }>(`/properties?${params.toString()}`);
+        if (data && Array.isArray(data.items) && data.items.length > 0) {
+          const filtered = filterPropertyList(data.items, {
+            query,
+            property_type: "Farmhouse",
+            location: selectedCity,
+            city: selectedCity,
+            state: selectedState,
+            min_price: minPrice,
+            max_price: maxPrice,
+            bedrooms,
+            verification_status: verificationStatus,
+            sort_by: sortBy,
+          });
+          setProperties(filtered);
+          setTotal(filtered.length);
+          apiLoaded = true;
+        }
+      } catch (err) {
+        // Fallback to local filter engine
       }
-    } catch (err) {
-      console.error("Failed to load farmhouses", err);
-      const fhMocks = MOCK_PROPERTIES.filter(p => p.property_type === "Farmhouse");
-      setProperties(fhMocks);
-      setTotal(fhMocks.length);
+
+      if (!apiLoaded) {
+        const filtered = filterPropertyList(MOCK_PROPERTIES, {
+          query,
+          property_type: "Farmhouse",
+          location: selectedCity,
+          city: selectedCity,
+          state: selectedState,
+          min_price: minPrice,
+          max_price: maxPrice,
+          bedrooms,
+          verification_status: verificationStatus,
+          sort_by: sortBy,
+        });
+        setProperties(filtered);
+        setTotal(filtered.length);
+      }
     } finally {
       setLoading(false);
     }

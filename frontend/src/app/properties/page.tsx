@@ -9,9 +9,10 @@ import Card3D from "@/components/ui/Card3D";
 import { Property } from "@/types";
 import { fetchApi } from "@/lib/api";
 import { MOCK_PROPERTIES } from "@/lib/mockData";
+import { filterPropertyList } from "@/lib/propertyFilters";
 import {
   SlidersHorizontal, MapPin, Filter, ArrowUpDown, ShieldCheck, Map as MapIcon, Grid,
-  Sparkles, TreePine, Waves, Home, Building2, ChevronRight, RotateCcw
+  Sparkles, TreePine, Waves, Home, Building2, ChevronRight, RotateCcw, X, Bed, IndianRupee
 } from "lucide-react";
 
 function SearchResultsContent() {
@@ -24,7 +25,7 @@ function SearchResultsContent() {
   const [showMap, setShowMap] = useState(false);
   const [expandedFilter, setExpandedFilter] = useState(false);
 
-  // Filters State
+  // Filters State (initialized from searchParams)
   const [query, setQuery] = useState(searchParams.get("smart_query") || searchParams.get("query") || "");
   const [selectedState, setSelectedState] = useState(searchParams.get("state") || "");
   const [selectedCity, setSelectedCity] = useState(searchParams.get("city") || searchParams.get("location") || "");
@@ -34,10 +35,29 @@ function SearchResultsContent() {
   const [landAreaUnit, setLandAreaUnit] = useState<"sqft" | "sqyd" | "acre" | "bigha">("sqft");
   const [minLandArea, setMinLandArea] = useState("");
   const [maxLandArea, setMaxLandArea] = useState("");
-  const [bedrooms, setBedrooms] = useState<string>("");
+  const [bedrooms, setBedrooms] = useState<string>(searchParams.get("bedrooms") || "");
   const [verificationStatus, setVerificationStatus] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("relevance");
   const [page, setPage] = useState(1);
+
+  // Keep state synced whenever URL search params change
+  useEffect(() => {
+    const q = searchParams.get("smart_query") || searchParams.get("query");
+    const loc = searchParams.get("city") || searchParams.get("location");
+    const pType = searchParams.get("property_type");
+    const maxP = searchParams.get("max_price");
+    const minP = searchParams.get("min_price");
+    const beds = searchParams.get("bedrooms");
+    const st = searchParams.get("state");
+
+    if (q !== null) setQuery(q);
+    if (loc !== null) setSelectedCity(loc);
+    if (pType !== null) setPropertyType(pType);
+    if (maxP !== null) setMaxPrice(maxP);
+    if (minP !== null) setMinPrice(minP);
+    if (beds !== null) setBedrooms(beds);
+    if (st !== null) setSelectedState(st);
+  }, [searchParams]);
 
   // Available Data Categories
   const categoriesList = [
@@ -57,7 +77,7 @@ function SearchResultsContent() {
   const topCitiesList = [
     { name: "All Cities", value: "" },
     { name: "Delhi (Chhatarpur)", value: "Delhi" },
-    { name: "Gurgaon (Golf Course)", value: "Gurgaon" },
+    { name: "Gurgaon (DLF & Golf Course)", value: "Gurgaon" },
     { name: "Alibaug (Coastal Belt)", value: "Alibaug" },
     { name: "North Goa (Assagao)", value: "Goa" },
     { name: "Lonavala (Tungarli)", value: "Lonavala" },
@@ -86,24 +106,47 @@ function SearchResultsContent() {
       params.append("page", page.toString());
       params.append("limit", "12");
 
-      const data = await fetchApi<{ items: Property[]; total: number }>(`/properties?${params.toString()}`);
-      if (data.items && data.items.length > 0) {
-        setProperties(data.items);
-        setTotal(data.total);
-      } else {
-        const filtered = propertyType 
-          ? MOCK_PROPERTIES.filter(p => p.property_type === propertyType)
-          : MOCK_PROPERTIES;
+      let apiLoaded = false;
+      try {
+        const data = await fetchApi<{ items: Property[]; total: number }>(`/properties?${params.toString()}`);
+        if (data && Array.isArray(data.items) && data.items.length > 0) {
+          // Double filter client-side to enforce strict exactness
+          const filtered = filterPropertyList(data.items, {
+            query,
+            location: selectedCity,
+            city: selectedCity,
+            state: selectedState,
+            property_type: propertyType,
+            min_price: minPrice,
+            max_price: maxPrice,
+            bedrooms,
+            verification_status: verificationStatus,
+            sort_by: sortBy,
+          });
+          setProperties(filtered);
+          setTotal(filtered.length);
+          apiLoaded = true;
+        }
+      } catch (err) {
+        // Backend offline or error -> fallback to rich mock data
+      }
+
+      if (!apiLoaded) {
+        const filtered = filterPropertyList(MOCK_PROPERTIES, {
+          query,
+          location: selectedCity,
+          city: selectedCity,
+          state: selectedState,
+          property_type: propertyType,
+          min_price: minPrice,
+          max_price: maxPrice,
+          bedrooms,
+          verification_status: verificationStatus,
+          sort_by: sortBy,
+        });
         setProperties(filtered);
         setTotal(filtered.length);
       }
-    } catch (err) {
-      console.error("Failed to load properties", err);
-      const filtered = propertyType 
-        ? MOCK_PROPERTIES.filter(p => p.property_type === propertyType)
-        : MOCK_PROPERTIES;
-      setProperties(filtered);
-      setTotal(filtered.length);
     } finally {
       setLoading(false);
     }
@@ -122,6 +165,20 @@ function SearchResultsContent() {
     setVerificationStatus("");
     setSortBy("relevance");
     setPage(1);
+    router.push("/properties");
+  };
+
+  // Check active filter count
+  const hasActiveFilters = Boolean(
+    query || selectedCity || selectedState || propertyType || minPrice || maxPrice || bedrooms || verificationStatus
+  );
+
+  const formatBudgetDisplay = (val: string) => {
+    const num = Number(val);
+    if (!num) return "";
+    if (num >= 10000000) return `₹${(num / 10000000).toFixed(0)} Cr`;
+    if (num >= 100000) return `₹${(num / 100000).toFixed(0)} Lakh`;
+    return `₹${num}`;
   };
 
   return (
@@ -132,7 +189,7 @@ function SearchResultsContent() {
         <div className="max-w-7xl mx-auto text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 uppercase tracking-widest">
             <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-            <span>Curated Estate Discovery</span>
+            <span>Verified Luxury Estate Discovery</span>
           </div>
           <h1 className="font-heading text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
             Explore Luxury <span className="bosa-gradient-text">Estates & Mansions</span>
@@ -143,7 +200,7 @@ function SearchResultsContent() {
         </div>
       </div>
 
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16 space-y-12 w-full">
+      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16 space-y-8 w-full">
         
         {/* ==================================================================== */}
         {/* 1. TOP CATEGORIES WE SELL */}
@@ -215,57 +272,32 @@ function SearchResultsContent() {
         </section>
 
         {/* ==================================================================== */}
-        {/* 2. TOP STATES WHERE PROPERTIES ARE LOCATED */}
+        {/* 2. TOP CITIES & ENCLAVES */}
         {/* ==================================================================== */}
         <section className="space-y-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div>
-            <span className="text-xs font-heading font-bold uppercase tracking-widest text-[#D4AF37]">
-              2. Prime State Regions
-            </span>
-            <h2 className="font-heading text-xl font-bold text-slate-900 mt-0.5">
-              Filter by Top States
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {topStatesList.map((st) => {
-              const isActive = selectedState === st.value;
-              return (
-                <button
-                  key={st.name}
-                  onClick={() => {
-                    setSelectedState(st.value);
-                    setPage(1);
-                  }}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-heading font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
-                    isActive
-                      ? "bosa-gradient-bg text-white shadow-md"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
-                  }`}
-                >
-                  {st.name}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ==================================================================== */}
-        {/* 3. TOP CITIES & ENCLAVES */}
-        {/* ==================================================================== */}
-        <section className="space-y-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div>
-            <span className="text-xs font-heading font-bold uppercase tracking-widest text-[#D4AF37]">
-              3. Prime City Enclaves
-            </span>
-            <h2 className="font-heading text-xl font-bold text-slate-900 mt-0.5">
-              Filter by Top Cities & Destinations
-            </h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-heading font-bold uppercase tracking-widest text-[#D4AF37]">
+                2. Prime City Enclaves
+              </span>
+              <h2 className="font-heading text-xl font-bold text-slate-900 mt-0.5">
+                Filter by Top Cities & Destinations
+              </h2>
+            </div>
+            {selectedCity && (
+              <button
+                onClick={() => setSelectedCity("")}
+                className="text-xs text-emerald-700 hover:underline font-semibold flex items-center gap-1"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>All Cities</span>
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
             {topCitiesList.map((ct) => {
-              const isActive = selectedCity === ct.value;
+              const isActive = selectedCity.toLowerCase() === ct.value.toLowerCase() || (!selectedCity && ct.value === "");
               return (
                 <button
                   key={ct.name}
@@ -275,7 +307,7 @@ function SearchResultsContent() {
                   }}
                   className={`px-5 py-2.5 rounded-xl text-xs font-heading font-bold uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-1.5 ${
                     isActive
-                      ? "bosa-gradient-bg text-white shadow-md"
+                      ? "bosa-gradient-bg text-white shadow-md border border-[#D4AF37]"
                       : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
                   }`}
                 >
@@ -288,7 +320,7 @@ function SearchResultsContent() {
         </section>
 
         {/* ==================================================================== */}
-        {/* 4. FILTER CONTROL DOCK & SORTING BAR */}
+        {/* 3. FILTER CONTROL DOCK & SORTING BAR */}
         {/* ==================================================================== */}
         <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg space-y-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -300,19 +332,34 @@ function SearchResultsContent() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by city, locality, or keyword..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
+                placeholder="Search city (e.g. Delhi), area, or keyword..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 font-medium"
               />
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             {/* Right Controls */}
-            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end flex-wrap sm:flex-nowrap">
               <button
                 onClick={() => setExpandedFilter(!expandedFilter)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 flex items-center gap-2 hover:bg-slate-200 transition-all"
+                className={`px-4 py-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition-all ${
+                  expandedFilter || maxPrice || bedrooms || minPrice
+                    ? "bg-emerald-50 border-emerald-300 text-emerald-900"
+                    : "bg-slate-100 border-slate-200 text-slate-800 hover:bg-slate-200"
+                }`}
               >
                 <SlidersHorizontal className="w-4 h-4 text-[#D4AF37]" />
-                <span>{expandedFilter ? "Hide Filters" : "More Filters (Budget/Area)"}</span>
+                <span>{expandedFilter ? "Hide Budget & Beds" : "Budget & Bedroom Filters"}</span>
+                {(maxPrice || bedrooms) && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
+                )}
               </button>
 
               <button
@@ -329,13 +376,13 @@ function SearchResultsContent() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-transparent focus:outline-none cursor-pointer font-bold"
+                  className="bg-transparent focus:outline-none cursor-pointer font-bold text-slate-900"
                 >
                   <option value="relevance">Sort: Relevance</option>
                   <option value="newest">Sort: Newest First</option>
                   <option value="price_asc">Price: Low to High</option>
                   <option value="price_desc">Price: High to Low</option>
-                  <option value="land_area_desc">Largest Plot Size</option>
+                  <option value="land_area_desc">Largest Land Area</option>
                 </select>
               </div>
             </div>
@@ -344,78 +391,151 @@ function SearchResultsContent() {
 
           {/* EXPANDABLE ADVANCED FILTERS PANEL */}
           {expandedFilter && (
-            <div className="pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              {/* Budget Range */}
+            <div className="pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+              
+              {/* Max Budget */}
               <div>
                 <label className="font-bold text-slate-800 block mb-1">Max Budget (₹)</label>
                 <select
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:outline-none focus:border-emerald-600"
                 >
                   <option value="">Any Budget</option>
-                  <option value="30000000">Up to ₹3 Cr</option>
-                  <option value="50000000">Up to ₹5 Cr</option>
-                  <option value="100000000">Up to ₹10 Cr</option>
-                  <option value="250000000">Up to ₹25 Cr+</option>
+                  <option value="50000000">Up to ₹5 Crore</option>
+                  <option value="100000000">Up to ₹10 Crore</option>
+                  <option value="200000000">Up to ₹20 Crore</option>
+                  <option value="350000000">Up to ₹35 Crore</option>
+                  <option value="500000000">Up to ₹50 Crore+</option>
                 </select>
               </div>
 
-              {/* Land Area Filter */}
+              {/* Bedrooms */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="font-bold text-slate-800">Land Area Unit</label>
-                  <select
-                    value={landAreaUnit}
-                    onChange={(e) => setLandAreaUnit(e.target.value as any)}
-                    className="bg-slate-100 text-[10px] text-emerald-800 font-bold border border-slate-200 rounded px-1"
-                  >
-                    <option value="sqft">Sq.Ft.</option>
-                    <option value="sqyd">Sq.Yd.</option>
-                    <option value="acre">Acres</option>
-                    <option value="bigha">Bigha</option>
-                  </select>
-                </div>
-                <input
-                  type="number"
-                  value={minLandArea}
-                  onChange={(e) => setMinLandArea(e.target.value)}
-                  placeholder={`Min Area in ${landAreaUnit.toUpperCase()}`}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900"
-                />
+                <label className="font-bold text-slate-800 block mb-1">Bedrooms (BHK)</label>
+                <select
+                  value={bedrooms}
+                  onChange={(e) => setBedrooms(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:outline-none focus:border-emerald-600"
+                >
+                  <option value="">Any Bedrooms</option>
+                  <option value="3">3+ BHK Suites</option>
+                  <option value="4">4+ BHK Luxury</option>
+                  <option value="5">5+ BHK Grand</option>
+                  <option value="6">6+ BHK Mansions</option>
+                </select>
+              </div>
+
+              {/* State */}
+              <div>
+                <label className="font-bold text-slate-800 block mb-1">State / Region</label>
+                <select
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:outline-none focus:border-emerald-600"
+                >
+                  <option value="">All States</option>
+                  <option value="Delhi">Delhi NCR</option>
+                  <option value="Haryana">Haryana</option>
+                  <option value="Maharashtra">Maharashtra</option>
+                  <option value="Goa">Goa</option>
+                </select>
               </div>
 
               {/* Verification & Reset */}
-              <div className="flex items-center justify-between pt-5">
+              <div className="flex flex-col justify-end gap-2">
                 <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800">
                   <input
                     type="checkbox"
                     checked={verificationStatus === "VERIFIED"}
                     onChange={(e) => setVerificationStatus(e.target.checked ? "VERIFIED" : "")}
-                    className="w-4 h-4 text-emerald-800 rounded"
+                    className="w-4 h-4 text-emerald-800 rounded accent-emerald-700"
                   />
                   <span>100% Verified Only</span>
                 </label>
 
                 <button
                   onClick={resetFilters}
-                  className="text-emerald-700 hover:underline font-bold"
+                  className="text-left text-xs text-emerald-700 hover:underline font-bold"
                 >
                   Reset All Filters
                 </button>
               </div>
             </div>
           )}
+
+          {/* ACTIVE FILTER BADGES ROW */}
+          {hasActiveFilters && (
+            <div className="pt-3 border-t border-slate-100 flex items-center gap-2 flex-wrap text-xs">
+              <span className="text-slate-500 font-semibold text-[11px] uppercase tracking-wider">Active Filters:</span>
+              
+              {selectedCity && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200 font-semibold">
+                  <MapPin className="w-3 h-3 text-emerald-700" />
+                  <span>City: {selectedCity}</span>
+                  <button onClick={() => setSelectedCity("")} className="hover:text-red-700 ml-0.5">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              {propertyType && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-300 font-semibold">
+                  <span>Type: {propertyType}</span>
+                  <button onClick={() => setPropertyType("")} className="hover:text-red-700 ml-0.5">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              {maxPrice && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 font-semibold">
+                  <IndianRupee className="w-3 h-3 text-amber-700" />
+                  <span>Max: {formatBudgetDisplay(maxPrice)}</span>
+                  <button onClick={() => setMaxPrice("")} className="hover:text-red-700 ml-0.5">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              {bedrooms && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-200 font-semibold">
+                  <Bed className="w-3 h-3 text-blue-700" />
+                  <span>Bedrooms: {bedrooms}+ BHK</span>
+                  <button onClick={() => setBedrooms("")} className="hover:text-red-700 ml-0.5">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              {query && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-300 font-semibold">
+                  <span>&quot;{query}&quot;</span>
+                  <button onClick={() => setQuery("")} className="hover:text-red-700 ml-0.5">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              <button
+                onClick={resetFilters}
+                className="text-xs text-slate-500 hover:text-slate-800 underline ml-2 font-medium"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
         </section>
 
         {/* ==================================================================== */}
-        {/* 5. ALL PROPERTIES GRID / MAP DISPLAY */}
+        {/* 4. ALL PROPERTIES GRID / MAP DISPLAY */}
         {/* ==================================================================== */}
         <section className="space-y-6">
           
           <div className="flex items-center justify-between border-b border-slate-200 pb-3">
             <h3 className="font-heading text-xl font-bold text-slate-900">
-              Listing Results ({properties.length} Properties)
+              Matching Properties ({properties.length})
             </h3>
             
             <div className="flex items-center gap-2 text-xs text-emerald-700 font-semibold">
@@ -445,13 +565,15 @@ function SearchResultsContent() {
           ) : properties.length === 0 ? (
             <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 my-8 shadow-sm">
               <Filter className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-              <h3 className="font-heading text-xl font-bold text-slate-900 mb-2">No Properties Found</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto mb-6">
-                Try selecting a different State, City, or Property Type filter above.
+              <h3 className="font-heading text-xl font-bold text-slate-900 mb-2">
+                No Listed Properties Found
+              </h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto mb-6">
+                No properties match your current filters {selectedCity ? `in "${selectedCity}"` : ""} {propertyType ? `for "${propertyType}"` : ""} {maxPrice ? `under ${formatBudgetDisplay(maxPrice)}` : ""}. Try adjusting the filters or click reset below.
               </p>
               <button
                 onClick={resetFilters}
-                className="px-6 py-2.5 rounded-xl bosa-gradient-bg text-white font-bold text-xs uppercase tracking-wider shadow-md"
+                className="px-6 py-2.5 rounded-xl bosa-gradient-bg text-white font-bold text-xs uppercase tracking-wider shadow-md hover:opacity-95 transition-all"
               >
                 Reset All Filters
               </button>

@@ -9,6 +9,7 @@ import Card3D from "@/components/ui/Card3D";
 import { Property } from "@/types";
 import { fetchApi } from "@/lib/api";
 import { MOCK_PROPERTIES } from "@/lib/mockData";
+import { filterPropertyList } from "@/lib/propertyFilters";
 import {
   SlidersHorizontal, MapPin, Filter, ArrowUpDown, ShieldCheck, Map as MapIcon, Grid,
   Sparkles, Waves, Sun, Anchor
@@ -28,7 +29,7 @@ function VillasContent() {
   const [selectedCity, setSelectedCity] = useState(searchParams.get("city") || searchParams.get("location") || "");
   const [minPrice, setMinPrice] = useState(searchParams.get("min_price") || "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("max_price") || "");
-  const [bedrooms, setBedrooms] = useState<string>("");
+  const [bedrooms, setBedrooms] = useState<string>(searchParams.get("bedrooms") || "");
   const [verificationStatus, setVerificationStatus] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("relevance");
   const [page, setPage] = useState(1);
@@ -67,20 +68,46 @@ function VillasContent() {
       params.append("page", page.toString());
       params.append("limit", "12");
 
-      const data = await fetchApi<{ items: Property[]; total: number }>(`/properties?${params.toString()}`);
-      if (data.items && data.items.length > 0) {
-        setProperties(data.items);
-        setTotal(data.total);
-      } else {
-        const villaMocks = MOCK_PROPERTIES.filter(p => p.property_type === "Villa");
-        setProperties(villaMocks);
-        setTotal(villaMocks.length);
+      let apiLoaded = false;
+      try {
+        const data = await fetchApi<{ items: Property[]; total: number }>(`/properties?${params.toString()}`);
+        if (data && Array.isArray(data.items) && data.items.length > 0) {
+          const filtered = filterPropertyList(data.items, {
+            query,
+            property_type: "Villa",
+            location: selectedCity,
+            city: selectedCity,
+            state: selectedState,
+            min_price: minPrice,
+            max_price: maxPrice,
+            bedrooms,
+            verification_status: verificationStatus,
+            sort_by: sortBy,
+          });
+          setProperties(filtered);
+          setTotal(filtered.length);
+          apiLoaded = true;
+        }
+      } catch (err) {
+        // Fallback
       }
-    } catch (err) {
-      console.error("Failed to load villas", err);
-      const villaMocks = MOCK_PROPERTIES.filter(p => p.property_type === "Villa");
-      setProperties(villaMocks);
-      setTotal(villaMocks.length);
+
+      if (!apiLoaded) {
+        const filtered = filterPropertyList(MOCK_PROPERTIES, {
+          query,
+          property_type: "Villa",
+          location: selectedCity,
+          city: selectedCity,
+          state: selectedState,
+          min_price: minPrice,
+          max_price: maxPrice,
+          bedrooms,
+          verification_status: verificationStatus,
+          sort_by: sortBy,
+        });
+        setProperties(filtered);
+        setTotal(filtered.length);
+      }
     } finally {
       setLoading(false);
     }
